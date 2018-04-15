@@ -1,0 +1,15 @@
+#define NEAR 15 //cm
+#define M_STR 50  //Motorstrength
+#define WAIT 500 //Waittime ms
+
+task main(){
+    SetSensorLowspeed(IN_3);
+    while(true){
+        OnFwd(OUT_AC,M_STR);
+        while(SensorUS(IN_3)<=NEAR){
+            Off(OUT_AC);
+            OnRev(OUT_C,M_STR*1.5);
+            Wait(WAIT);
+        }
+    }
+}

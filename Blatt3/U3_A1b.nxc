@@ -1,0 +1,131 @@
+#define SPEED 35    //Speed of the switched on motors
+
+//==EVENTS======================================================================
+short events = 0;
+typedef short EventType;
+  //EventType masks
+#define LEFTTOUCHPRESSED 1
+#define RIGHTTOUCHPRESSED 2
+#define INFRAREDTRIGGERED 4
+#define TIMEREVENT 8
+
+  //Sets Event of Type ev
+void setEvent(EventType ev){
+  events |= ev;
+}
+
+  //Delets Event of Type ev
+void clearEvent(EventType ev){
+  events &= ~(ev);
+}
+
+  //Checks if Event of Type ev is present
+bool eventIsPresent(EventType ev)
+{
+  if((events && ev) != 0){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+//==TIMERS======================================================================
+typedef unsigned int TimerType
+#define MAX_COUNT_TIMERS 10
+
+  //Timer Struct
+typedef struct{
+  unsigned int duration;   //Duration of the timer in mSec
+  unsigned long startTime; //Starting Time of the Timer
+  EventType event;   //Event send at the end of the Timer
+  bool isActive   //True if Timer is active
+}Timer;
+
+  //Timer-Array to handle multiple Timers
+Timer timers[MAX_COUNT_TIMERS]; //Timer Array of length MAX_COUNT_TIMERS
+
+  //Sets a Timer t_id with a specific duration that sends an Event of Type ev
+void setTimer(TimerType t_id,unsigned int duration, EventType ev){
+  timers[t_id].stop_time = duration;
+  timers[t_id].event = ev;
+}
+
+  //Starts Timer t_id if specified
+void startTimer(TimerType t_id){
+    timers[t_id].startTime = CurrentTick();
+    timers[t_id].isActive = true;
+}
+
+  //Cancles Timer t_id
+void cancleTimer(TimerType t_id){
+  timers[t_id].isActive = false;
+}
+
+   //Checks all Timers of the exceeded
+void checkTimers(){
+  for(int i = 0 ; i < MAX_COUNT_TIMERS;i++){
+    if(timers[i].isActive &&CurrentTick()-timers[i].startTime > timer[i].duration)){
+      timers[i].isActive = false;
+      setEvent(timers[i].event);
+    }
+  }
+}
+
+//==SENSOR=REGISTRATION=========================================================
+bool left_pressed = false;
+bool right_pressed = false;
+bool fwd = true;
+
+task left_sensor(){
+  int val_old = 0;
+  while(true){
+  int val_new = SensorValue(S4);
+  if((val_old == 0 && val_new == 1)){
+    left_pressed = true;
+  }
+  val_old = val_new;
+  Wait(100);
+  }
+}
+
+task right_sensor(){
+  int val_old = 0;
+  while(true){
+  int val_new = SensorValue(S1);
+  if((val_old == 0 && val_new == 1)){
+    right_pressed = true;
+  }
+  val_old = val_new;
+  Wait(100);
+  }
+}
+
+task does_it_all(){
+  long t0;
+  int val_old_l = 0 ;
+  int val_old_r = 0 ;
+  while(true){
+    if(left_pressed){
+      if(fwd){
+        OnFwd(OUT_AC,SPEED);
+      }
+      else{
+        OnRev(OUT_AC,SPEED);
+      }
+      Wait(1000);
+      Off(OUT_AC);
+      left_pressed = false;
+    }
+    if(right_pressed){
+      fwd = !fwd;
+      right_pressed = false;
+    }
+  }
+}
+
+task main(){
+  SetSensorTouch(IN_1);
+  SetSensorTouch(IN_4);
+  Precedes(left_sensor,right_sensor,does_it_all);
+}

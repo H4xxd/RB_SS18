@@ -1,0 +1,57 @@
+#define SPEED 35
+
+bool left_pressed = false;
+bool right_pressed = false;
+bool fwd = true;
+
+task left_sensor(){
+     int val_old = 0;
+     while(true){
+        int val_new = SensorValue(S4);
+        if((val_old == 0 && val_new == 1)){
+                    left_pressed = true;
+        }
+        val_old = val_new;
+        Wait(100);
+      }
+}
+
+task right_sensor(){
+  int val_old = 0;
+     while(true){
+        int val_new = SensorValue(S1);
+        if((val_old == 0 && val_new == 1)){
+          right_pressed = true;
+          fwd = !fwd;
+        }
+        val_old = val_new;
+        Wait(100);
+      }
+}
+
+task does_it_all(){
+    long t0;
+    int val_old_l = 0 ;
+    int val_old_r = 0 ;
+     while(true){
+        if(left_pressed){
+          if(fwd){
+            OnFwd(OUT_AC,SPEED);
+          }else
+          {
+            OnRev(OUT_AC,SPEED);
+          }
+          Wait(1000);
+          Off(OUT_AC);
+          left_pressed = false;
+        }
+      }
+}
+
+task main(){
+
+     SetSensorTouch(IN_1);
+     SetSensorTouch(IN_4);
+     Precedes(left_sensor,right_sensor,does_it_all);
+
+}
