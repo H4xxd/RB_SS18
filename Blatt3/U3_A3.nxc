@@ -1,0 +1,25 @@
+#define TURN_SPEED 35
+#define WAIT_TIME_TURN_90 1000
+
+#define MSPERDEGREE 30
+
+void turnAtStart(bool direction){
+ if(direction){
+  turn(90);
+ }
+ else{
+  turn(-90);
+ }
+}
+
+void turn(short degree){
+ if(degree > 0){
+  OnFwd(OUT_A, TURN_SPEED);
+  OnRev(OUT_C, TURN_SPEED);
+	Wait(MSPERDEGREE * degree);
+ }else{
+  OnFwd(OUT_C, TURN_SPEED);
+  OnRev(OUT_A, TURN_SPEED);
+   Wait(MSPERDEGREE * (-degree));
+ }
+}
