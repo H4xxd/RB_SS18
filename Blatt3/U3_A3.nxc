@@ -20,11 +20,10 @@ short currentState;
 #define q5R 11
 #define q6 12
 
-
-
 //==EVENTS======================================================================
 short events = 0;
 typedef short EventType;
+
   //EventType masks
 #define LEFTTOUCHPRESSED 1
 #define RIGHTTOUCHPRESSED 2
@@ -132,9 +131,6 @@ void fwd(){
 }
 
 //==SENSOR=REGISTRATION=========================================================
-bool left_pressed = false;
-bool right_pressed = false;
-
 task left_sensor(){
   int val_old = 0;
   while(true){
