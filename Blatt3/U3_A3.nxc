@@ -4,22 +4,6 @@
 #define MSPERDEGREE 11  //Time for 1 degree vong rotation at SPEED
 #define MSBOXTOBOX 2000 //Time it takes the NXT to reach an adjacent box
 
-//==STATEDEFINES================================================================
-short currentState;
-#define q3 0
-#define q0 1
-#define q1L 2
-#define q1R 3
-#define q2L 4
-#define q2R 5
-#define q3L 6
-#define q3R 7
-#define q4L 8
-#define q4R 9
-#define q5L 10
-#define q5R 11
-#define q6 12
-
 //==EVENTS======================================================================
 short events = 0;
 typedef short EventType;
@@ -155,8 +139,23 @@ task right_sensor(){
   }
 }
 
-//==STATEMACHINE================================================================
+//==STATEDEFINES================================================================
+short currentState;
+#define q3 0
+#define q0 1
+#define q1L 2
+#define q1R 3
+#define q2L 4
+#define q2R 5
+#define q3L 6
+#define q3R 7
+#define q4L 8
+#define q4R 9
+#define q5L 10
+#define q5R 11
+#define q6 12
 
+//==STATEMACHINE================================================================
 void leftPressed(){
 	switch (currentState){
   	case q0:
