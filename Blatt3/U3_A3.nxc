@@ -6,12 +6,12 @@
 
 //==STATEDEFINES================================================================
 short currentState;
-#define q0 0
-#define q1L 1
-#define q1R 2
-#define q2L 3
-#define q2R 4
-#define q3 5
+#define q3 0
+#define q0 1
+#define q1L 2
+#define q1R 3
+#define q2L 4
+#define q2R 5
 #define q3L 6
 #define q3R 7
 #define q4L 8
@@ -30,6 +30,7 @@ typedef short EventType;
 #define RIGHTTOUCHPRESSED 2
 #define INFRAREDTRIGGERED 4
 #define STOPMOTOR 8
+#define WAITINGTIMEEXCEEDED 16
 
   //Sets Event of Type ev
 void setEvent(EventType ev){
@@ -160,49 +161,218 @@ task right_sensor(){
 
 //==STATEMACHINE================================================================
 
-void returnToStartingPosition(){
-  switch (currentState){
-   case q0:
-	turn(180);
-	repeat(3) fwd();
-	turn (-90);
-	break;
-   case q1R:
-	repeat(2) fwd();
-	turn(-90);
-	break;
-   case q1L:
-	turn(180);
-	repeat(2) fwd();
-	turn(-90);
-	break;
-  }
+void leftPressed(){
+	switch (currentState){
+  	case q0:
+			break;
+  	case q1R:
+			turn(180);
+			fwd();
+			currentState = q0;
+			break;
+  	case q1L:
+			fwd();
+			currentState = q0;
+			break;
+		case q2R:
+			turn(180);
+			fwd();
+			currentState = q1L;
+			break;
+		case q2L:
+			fwd();
+			currentState = q1L;
+			break;
+		case q3R:
+			turn(180);
+			currentState = q2L;
+			break;
+		case q3L:
+			fwd();
+			currentState = q2L;
+			break;
+		case q4R:
+			turn(180);
+			fwd();
+			currentState = q3L;
+			break;
+		case q4L:
+			fwd();
+			currentState = q3L;
+			break;
+		case q5R:
+			turn(180);
+			fwd();
+			currentState = q4L;
+			break;
+		case q5L:
+			fwd();
+			currentState = q4L;
+			break;
+		case q6:
+			turn(180);
+			fwd();
+			currentState = q5L;
+			break;
+		case q3:
+			turn(-90);
+			fwd();
+			currentState = q2L;
+			break;
+		}
 }
+
+void rightPressed(){
+
+	switch (currentState){
+  	case q0:
+			turn(180);
+			fwd();
+			break;
+  	case q1R:
+			fwd();
+			currentState = q2R;
+			break;
+  	case q1L:
+			turn(180);
+			fwd();
+			currentState = q2R;
+			break;
+		case q2R:
+			fwd();
+			currentState = q3R;
+			break;
+		case q2L:
+			turn(180);
+			fwd();
+			currentState = q3R;
+			break;
+		case q3R:
+			currentState = q4R;
+			break;
+		case q3L:
+			turn(180);
+			fwd();
+			currentState = q4R;
+			break;
+		case q4R:
+			fwd();
+			currentState = q5R;
+			break;
+		case q4L:
+			turn(180);
+			fwd();
+			currentState = q5R;
+			break;
+		case q5R:
+			fwd();
+			currentState = q6;
+			break;
+		case q5L:
+			turn(180);
+			fwd();
+			currentState = q6;
+			break;
+		case q6:
+			break;
+		case q3:
+			turn(90);
+			fwd();
+			currentState = q4R;
+			break;
+		}
+}
+
+void timerExceeded(){
+  switch (currentState){
+  	case q0:
+	  	turn(180);
+			repeat(3) fwd();
+			turn (-90);
+			break;
+  	case q1R:
+			repeat(2) fwd();
+			turn(-90);
+			break;
+  	case q1L:
+			turn(180);
+			repeat(2) fwd();
+			turn(-90);
+			break;
+		case q2R:
+			fwd();
+			turn(-90);
+			break;
+		case q2L:
+			turn(180);
+			fwd();
+			turn(-90);
+			break;
+		case q3R:
+			turn(-90);
+			break;
+		case q3L:
+			turn(90);
+			break;
+		case q4R:
+			turn(180);
+			fwd();
+			turn(90);
+			break;
+		case q4L:
+			fwd();
+			turn(90);
+			break;
+		case q5R:
+			turn(180);
+			repeat(2) fwd();
+			turn(90);
+			break;
+		case q5L:
+			repeat(2) fwd();
+			turn(90);
+			break;
+		case q6:
+			turn(180);
+			repeat(3) fwd();
+			turn(90);
+			break;
+		case q3:
+			//wait some moa
+			break;
+  }
+	//set new STATE
+	currentState = q3;
+}
+
 //==Maincode====================================================================
 
 task mainApp(){
 
-  
-  currentState = q3;
-  
-  setTimer(TIMER_0,1000,STOPMOTOR);
-  
-  while(true){
-    if(eventIsPresent(LEFTTOUCHPRESSED)){
-		
-		clearEvent(LEFTTOUCHPRESSED);
-    }
-    
-	if(eventIsPresent(STOPMOTOR)){
-      Off(OUT_AC);
-      clearEvent(STOPMOTOR);
-    }
-  }
+	while(true){
+		if(eventIsPresent(LEFTTOUCHPRESSED)){
+			leftPressed();
+			clearEvent(LEFTTOUCHPRESSED);
+			startTimer(TIMER_0);
+
+		}elseif(eventIsPresent(RIGHTTOUCHPRESSED)){
+			rightPressed();
+			clearEvent(RIGHTTOUCHPRESSED);
+			startTimer(TIMER_0);
+
+		}elseif(eventIsPresent(WAITINGTIMEEXCEEDED)){
+			timerExceeded();
+			clearEvent(WAITINGTIMEEXCEEDED);
+		}
+	Wait(10);
+	}
+
 }
 
 task main(){
   SetSensorTouch(IN_1);
   SetSensorTouch(IN_4);
   enableTimers();
+	currentState = q3;
   Precedes(left_sensor,right_sensor,mainApp);
 }
